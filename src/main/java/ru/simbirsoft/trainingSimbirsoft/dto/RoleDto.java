@@ -10,8 +10,6 @@ import ru.simbirsoft.trainingSimbirsoft.domain.Role;
 @AllArgsConstructor
 public class RoleDto {
 
-    private long id;
-
     private String name;
 
     private boolean permission_send_message;
@@ -32,7 +30,6 @@ public class RoleDto {
 
     public static RoleDto fromEntityToModel(Role role){
         RoleDto roleDto = new RoleDto();
-        roleDto.setId(role.getId());
         roleDto.setName(role.getName());
         roleDto.setPermission_send_message(role.isPermission_send_message());
         roleDto.setPermission_get_message(role.isPermission_get_message());

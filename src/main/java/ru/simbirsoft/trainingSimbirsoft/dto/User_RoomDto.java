@@ -14,9 +14,6 @@ import java.sql.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User_RoomDto {
-
-    private long id;
-
     private User user;
 
     private Room room;
@@ -29,7 +26,6 @@ public class User_RoomDto {
 
     public static User_RoomDto fromEntityToModel(User_Room user_room){
         User_RoomDto user_roomDto = new User_RoomDto();
-        user_roomDto.setId(user_room.getId());
         user_roomDto.setUser(user_room.getUser());
         user_roomDto.setRoom(user_room.getRoom());
         user_roomDto.setRole(user_room.getRole());

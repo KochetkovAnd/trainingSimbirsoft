@@ -14,8 +14,6 @@ import java.sql.Date;
 @AllArgsConstructor
 public class MessageDto {
 
-    private long id;
-
     private User_Room user_room;
 
     private String text;
@@ -24,7 +22,6 @@ public class MessageDto {
 
     public static MessageDto fromEntityToModel(Message message){
         MessageDto messageDto = new MessageDto();
-        messageDto.setId(message.getId());
         messageDto.setUser_room(message.getUser_room());
         messageDto.setText(message.getText());
         messageDto.setSendTime(message.getSendTime());

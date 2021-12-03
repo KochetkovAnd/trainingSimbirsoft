@@ -11,15 +11,12 @@ import ru.simbirsoft.trainingSimbirsoft.domain.User;
 @AllArgsConstructor
 public class UserDto {
 
-    private long Id;
-
     private String name;
 
     private String password;
 
     public static UserDto fromEntityToModel(User user){
         UserDto userDto = new UserDto();
-        userDto.setId(user.getId());
         userDto.setName(user.getName());
         userDto.setPassword(user.getPassword());
         return userDto;

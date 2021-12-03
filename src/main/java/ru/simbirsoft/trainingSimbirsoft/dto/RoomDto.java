@@ -12,8 +12,6 @@ import ru.simbirsoft.trainingSimbirsoft.domain.User;
 @AllArgsConstructor
 public class RoomDto {
 
-    private long id;
-
     private String name;
 
     private String type;
@@ -22,7 +20,6 @@ public class RoomDto {
 
     public static RoomDto fromEntityToModel(Room room){
         RoomDto roomDto = new RoomDto();
-        roomDto.setId(room.getId());
         roomDto.setName(room.getName());
         roomDto.setType(room.getType());
         roomDto.setOwner(room.getOwner());
