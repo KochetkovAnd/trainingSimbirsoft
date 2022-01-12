@@ -12,33 +12,35 @@ import java.util.List;
 @RequestMapping("/api/connection")
 public class ConnectionRestController {
 
-    private final ConnectionServiceImpl user_roomServiceImpl;
+    private final ConnectionServiceImpl connectionServiceImpl;
 
     @GetMapping
     public List<ConnectionDTO> getAll() {
-        return user_roomServiceImpl.getAll();
+        return connectionServiceImpl.getAll();
     }
 
     @GetMapping("/getById")
     public ConnectionDTO getById(@RequestParam(name = "id") Long id){
         if(id != null){
-            return user_roomServiceImpl.getById(id);
+            return connectionServiceImpl.getById(id);
         }
         return null;
     }
 
     @PostMapping("/create")
     ConnectionDTO create(@RequestBody ConnectionDTO connectionDTO){
-        return user_roomServiceImpl.create(connectionDTO);
+        return connectionServiceImpl.create(connectionDTO);
     }
 
     @PostMapping("/update")
     ConnectionDTO update(@RequestBody ConnectionDTO connectionDTO){
-        return user_roomServiceImpl.update(connectionDTO);
+        return connectionServiceImpl.update(connectionDTO);
     }
 
     @DeleteMapping("/deleteById")
     public boolean deleteById(@RequestParam(name = "id") Long id){
-        return user_roomServiceImpl.deleteById(id);
+        return connectionServiceImpl.deleteById(id);
     }
+
+
 }

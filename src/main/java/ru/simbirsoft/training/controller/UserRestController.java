@@ -43,4 +43,24 @@ public class UserRestController {
         return userServiceImpl.deleteById(id);
     }
 
+    @GetMapping("/blockById")
+    UserDTO blockById(@RequestParam(name = "id") Long id){
+        return userServiceImpl.blockById(id);
+    }
+
+    @GetMapping("/unblockById")
+    UserDTO unblockById(@RequestParam(name = "id") Long id){
+        return userServiceImpl.unblockById(id);
+    }
+
+    @GetMapping("/makeModerById")
+    UserDTO makeModerById(@RequestParam(name = "id") Long id){
+        return userServiceImpl.makeModer(id);
+    }
+
+    @GetMapping("/removeModerById")
+    UserDTO removeModerById(@RequestParam(name = "id") Long id){
+        return userServiceImpl.removeModer(id);
+    }
+
 }
