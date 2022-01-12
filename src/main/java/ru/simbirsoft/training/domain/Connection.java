@@ -23,10 +23,6 @@ public class Connection {
     @JoinColumn(name = "room_id")
     private Room room;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id")
-    private Role role;
-
     @Column(name = "before_ban_role_id")
     private Long before_ban_role_id;
 

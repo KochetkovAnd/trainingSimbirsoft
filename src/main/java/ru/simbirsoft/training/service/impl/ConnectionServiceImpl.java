@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.Connection;
 import ru.simbirsoft.training.dto.ConnectionDTO;
-import ru.simbirsoft.training.exceptions.ConnectionNotFoundException;
+import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.ConnectionMapper;
 import ru.simbirsoft.training.repository.ConnectionRepository;
 import ru.simbirsoft.training.service.ConnectionService;
@@ -31,7 +31,7 @@ public class ConnectionServiceImpl implements ConnectionService {
         if (connectionRepository.findById(id).isPresent()){
             return toDTO(connectionRepository.getById(id));
         }
-        throw new ConnectionNotFoundException(id);
+        throw new ResourceNotFoundException("No connection found with id = " + id, "");
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ConnectionServiceImpl implements ConnectionService {
             create(connectionDTO);
             return connectionDTO;
         }
-        throw new ConnectionNotFoundException(connectionDTO.getId());
+        throw new ResourceNotFoundException("No connection found with id = " + connectionDTO.getId(), "");
     }
 
     @Override

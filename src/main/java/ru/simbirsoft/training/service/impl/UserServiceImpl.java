@@ -1,18 +1,21 @@
 package ru.simbirsoft.training.service.impl;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.User;
+import ru.simbirsoft.training.domain.enums.Role;
+import ru.simbirsoft.training.domain.enums.Status;
 import ru.simbirsoft.training.dto.UserDTO;
-import ru.simbirsoft.training.exceptions.UserNotFoundException;
+import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.UserMapper;
 import ru.simbirsoft.training.repository.UserRepository;
 import ru.simbirsoft.training.service.UserService;
 
 import java.util.List;
 
-@Service
+@Service("userServiceImpl")
 
 public class UserServiceImpl implements UserService {
 
@@ -35,7 +38,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findById(id).isPresent()){
             return toDTO(userRepository.getById(id));
         }
-        throw new UserNotFoundException(id);
+        throw new ResourceNotFoundException("No user found with id = " + id, "");
     }
 
     @Override
@@ -52,17 +55,75 @@ public class UserServiceImpl implements UserService {
             create(userDTO);
             return toDTO(userRepository.findByName(userDTO.getName()));
         }
-        throw new UserNotFoundException(userDTO.getId());
+        throw new ResourceNotFoundException("No user found with id = " + userDTO.getId(), "");
 
     }
 
     @Override
     @Transactional
+
     public boolean deleteById(Long id) {
         if(userRepository.findById(id).isPresent()) {
             userRepository.deleteById(id);
         }
         return (userRepository.findById(id).isPresent());
+    }
+
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('users:block')")
+    public UserDTO blockById(Long id) {
+        if (userRepository.findById(id).isPresent()){
+            UserDTO userDTO = getById(id);
+            userDTO.setId(id);
+            userDTO.setStatus(Status.BANNED);
+            create(userDTO);
+            return toDTO(userRepository.getById(id));
+        }
+        throw new ResourceNotFoundException("No user found with id = " + id, "");
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('users:unblock')")
+    public UserDTO unblockById(Long id) {
+        if (userRepository.findById(id).isPresent()){
+            UserDTO userDTO = getById(id);
+            userDTO.setId(id);
+            userDTO.setStatus(Status.ACTIVE);
+            create(userDTO);
+            return toDTO(userRepository.getById(id));
+        }
+        throw new ResourceNotFoundException("No user found with id = " + id, "");
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('users:make_moderator')")
+    public UserDTO makeModer(Long id) {
+        if (userRepository.findById(id).isPresent()){
+            UserDTO userDTO = getById(id);
+            userDTO.setId(id);
+            userDTO.setRole(Role.MODER);
+            create(userDTO);
+            return toDTO(userRepository.getById(id));
+        }
+        throw new ResourceNotFoundException("No user found with id = " + id, "");
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('users:remove_moderator')")
+    public UserDTO removeModer(Long id) {
+        if (userRepository.findById(id).isPresent()){
+            UserDTO userDTO = getById(id);
+            userDTO.setId(id);
+            userDTO.setRole(Role.USER);
+            create(userDTO);
+            return toDTO(userRepository.getById(id));
+        }
+        throw new ResourceNotFoundException("No user found with id = " + id, "");
     }
 
     private User toEntity(UserDTO userDto){
@@ -81,3 +142,4 @@ public class UserServiceImpl implements UserService {
         return UserMapper.USER_MAPPER.allToDTO(userList);
     }
 }
+

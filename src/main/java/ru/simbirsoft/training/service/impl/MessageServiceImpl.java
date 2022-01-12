@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.Message;
 import ru.simbirsoft.training.dto.MessageDTO;
-import ru.simbirsoft.training.exceptions.MessageNotFoundException;
+import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.MessageMapper;
 import ru.simbirsoft.training.repository.MessageRepository;
 import ru.simbirsoft.training.service.MessageService;
@@ -31,7 +31,7 @@ public class MessageServiceImpl implements MessageService {
         if (messageRepository.findById(id).isPresent()) {
             return toDTO(messageRepository.getById(id));
         }
-        throw new MessageNotFoundException(id);
+        throw new ResourceNotFoundException("No message found with id = " + id, "");
     }
 
     @Override
@@ -48,7 +48,7 @@ public class MessageServiceImpl implements MessageService {
             create(messageDTO);
             return messageDTO;
         }
-        throw new MessageNotFoundException(messageDTO.getId());
+        throw new ResourceNotFoundException("No message found with id = " + messageDTO.getId(), "");
     }
 
     @Override

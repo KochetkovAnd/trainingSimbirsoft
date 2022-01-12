@@ -1,6 +1,8 @@
 package ru.simbirsoft.training.domain;
 
 import lombok.Data;
+import ru.simbirsoft.training.domain.enums.Role;
+import ru.simbirsoft.training.domain.enums.Status;
 
 import javax.persistence.*;
 
@@ -19,4 +21,12 @@ public class User {
 
     @Column(name = "password")
     private String password;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "role")
+    private Role role;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "status")
+    private Status status;
 }

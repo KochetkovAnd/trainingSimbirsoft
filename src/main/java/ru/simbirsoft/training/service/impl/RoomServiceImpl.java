@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.Room;
 import ru.simbirsoft.training.dto.RoomDTO;
-import ru.simbirsoft.training.exceptions.RoomNotFoundException;
+import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.RoomMapper;
 import ru.simbirsoft.training.repository.RoomRepository;
 import ru.simbirsoft.training.service.RoomService;
@@ -31,7 +31,7 @@ public class RoomServiceImpl implements RoomService {
         if (roomRepository.findById(id).isPresent()) {
             return toDTO(roomRepository.getById(id));
         }
-        throw new RoomNotFoundException(id);
+        throw new ResourceNotFoundException("No room found with id = " + id, "");
     }
 
     @Override
@@ -48,7 +48,7 @@ public class RoomServiceImpl implements RoomService {
             create(roomDTO);
             return roomDTO;
         }
-        throw new RoomNotFoundException(roomDTO.getId());
+        throw new ResourceNotFoundException("No room found with id = " + roomDTO.getId(), "");
     }
 
     @Override
