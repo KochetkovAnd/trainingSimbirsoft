@@ -41,4 +41,19 @@ public class RoomRestController {
     public boolean deleteById(@RequestParam(name = "id") Long id){
         return roomServiceImpl.deleteById(id);
     }
+
+    @PostMapping("/createPublic")
+    RoomDTO createPublic(@RequestBody RoomDTO roomDTO){
+        return roomServiceImpl.createPublic(roomDTO);
+    }
+
+    @PostMapping("/createPrivate")
+    RoomDTO createPrivate(@RequestBody RoomDTO roomDTO){
+        return roomServiceImpl.createPrivate(roomDTO);
+    }
+
+    @PostMapping("/rename")
+    RoomDTO rename(@RequestBody RoomDTO roomDTO){
+        return roomServiceImpl.rename(roomDTO);
+    }
 }

@@ -62,5 +62,4 @@ public class UserRestController {
     UserDTO removeModerById(@RequestParam(name = "id") Long id){
         return userServiceImpl.removeModer(id);
     }
-
 }

@@ -13,5 +13,8 @@ public interface RoomService {
     RoomDTO create(RoomDTO roomDTO);
     RoomDTO update(RoomDTO roomDTO);
     boolean deleteById(Long id);
+    RoomDTO createPublic(RoomDTO roomDTO);
+    RoomDTO createPrivate(RoomDTO roomDTO);
+    RoomDTO rename(RoomDTO roomDTO);
 
 }

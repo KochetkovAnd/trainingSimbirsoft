@@ -3,17 +3,14 @@ package ru.simbirsoft.training.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.simbirsoft.training.domain.Room;
-import ru.simbirsoft.training.domain.User;
-
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConnectionDTO {
+public class ConnectionIdDTO {
 
     private Long id;
-    private User user;
-    private Room room;
+    private Long user_id;
+    private Long room_id;
 
 }

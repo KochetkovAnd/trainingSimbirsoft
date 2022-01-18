@@ -2,6 +2,7 @@ package ru.simbirsoft.training.domain;
 
 
 import lombok.Data;
+import ru.simbirsoft.training.domain.enums.RoomType;
 
 import javax.persistence.*;
 
@@ -18,8 +19,9 @@ public class Room {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "type")
-    private String type;
+    @Enumerated(value = EnumType.STRING)
+    @JoinColumn(name = "type")
+    private RoomType type;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id")

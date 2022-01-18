@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.simbirsoft.training.domain.User;
+import ru.simbirsoft.training.domain.enums.RoomType;
 
 @Data
 @NoArgsConstructor
@@ -13,7 +14,7 @@ public class RoomDTO {
 
     private Long id;
     private String name;
-    private String type;
+    private RoomType type;
     private User owner;
 
 }

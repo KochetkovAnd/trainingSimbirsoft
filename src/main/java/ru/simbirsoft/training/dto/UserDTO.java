@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.simbirsoft.training.domain.enums.Role;
-import ru.simbirsoft.training.domain.enums.Status;
 
 @Data
 @NoArgsConstructor
@@ -16,6 +15,5 @@ public class UserDTO {
     private String name;
     private String password;
     private Role role;
-    private Status status;
 
 }

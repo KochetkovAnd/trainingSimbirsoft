@@ -1,6 +1,7 @@
 package ru.simbirsoft.training.service;
 
 import ru.simbirsoft.training.dto.ConnectionDTO;
+import ru.simbirsoft.training.dto.ConnectionIdDTO;
 
 import java.util.List;
 
@@ -11,4 +12,5 @@ public interface ConnectionService {
     ConnectionDTO create(ConnectionDTO connectionDTO);
     ConnectionDTO update(ConnectionDTO connectionDTO);
     boolean deleteById(Long id);
+    ConnectionDTO createById(ConnectionIdDTO connectionIdDTO);
 }

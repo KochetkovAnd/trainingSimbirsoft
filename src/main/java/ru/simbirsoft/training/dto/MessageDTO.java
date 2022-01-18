@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.simbirsoft.training.domain.Connection;
 
-import java.sql.Date;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor

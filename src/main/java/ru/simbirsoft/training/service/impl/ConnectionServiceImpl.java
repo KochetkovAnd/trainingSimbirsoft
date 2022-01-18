@@ -1,14 +1,23 @@
 package ru.simbirsoft.training.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.Connection;
+import ru.simbirsoft.training.domain.User;
+import ru.simbirsoft.training.domain.enums.Permission;
 import ru.simbirsoft.training.dto.ConnectionDTO;
+import ru.simbirsoft.training.dto.ConnectionIdDTO;
+import ru.simbirsoft.training.exceptions.NoPermissionException;
 import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.ConnectionMapper;
 import ru.simbirsoft.training.repository.ConnectionRepository;
+import ru.simbirsoft.training.repository.RoomRepository;
+import ru.simbirsoft.training.repository.UserRepository;
 import ru.simbirsoft.training.service.ConnectionService;
 
 import java.util.List;
@@ -18,6 +27,8 @@ import java.util.List;
 public class ConnectionServiceImpl implements ConnectionService {
 
     private final ConnectionRepository connectionRepository;
+    private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,9 +66,34 @@ public class ConnectionServiceImpl implements ConnectionService {
     @Transactional
     public boolean deleteById(Long id) {
         if(connectionRepository.findById(id).isPresent()) {
-            connectionRepository.deleteById(id);
+            UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User user = userRepository.findByName(securityUser.getUsername());
+            if (user.equals(connectionRepository.getById(id).getRoom().getOwner()) || user.getRole().getPermissions().contains(Permission.CONNECTION_REMOVE)) {
+                connectionRepository.deleteById(id);
+                return (connectionRepository.findById(id).isPresent());
+            }
+            throw new NoPermissionException("No permission to connection with id = " + id, "");
         }
-        return (connectionRepository.findById(id).isPresent());
+        throw new ResourceNotFoundException("No connection found with id = " + id, "");
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @PreAuthorize("hasAuthority('connection:create')")
+    public ConnectionDTO createById(ConnectionIdDTO connectionIdDTO) {
+        if (userRepository.findById(connectionIdDTO.getUser_id()).isPresent()) {
+            if (roomRepository.findById(connectionIdDTO.getRoom_id()).isPresent()) {
+
+                ConnectionDTO connectionDTO = new ConnectionDTO(connectionIdDTO.getUser_id(),
+                        userRepository.getById(connectionIdDTO.getUser_id()),
+                        roomRepository.getById(connectionIdDTO.getRoom_id()));
+
+                connectionRepository.save(toEntity(connectionDTO));
+                return connectionDTO;
+            }
+            throw new ResourceNotFoundException("No room found with id = " + connectionIdDTO.getRoom_id(), "");
+        }
+        throw new ResourceNotFoundException("No user found with id = " + connectionIdDTO.getUser_id(), "");
     }
 
     private Connection toEntity(ConnectionDTO connectionDTO){

@@ -3,6 +3,7 @@ package ru.simbirsoft.training.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.simbirsoft.training.dto.MessageDTO;
+import ru.simbirsoft.training.dto.MessageIdDTO;
 import ru.simbirsoft.training.service.impl.MessageServiceImpl;
 
 import java.util.List;
@@ -28,8 +29,8 @@ public class MessageRestController {
     }
 
     @PostMapping("/create")
-    MessageDTO create(@RequestBody MessageDTO messageDTO){
-        return messageServiceImpl.create(messageDTO);
+    MessageDTO createById(@RequestBody MessageIdDTO messageidDTO){
+        return messageServiceImpl.createById(messageidDTO);
     }
 
     @PostMapping("/update")

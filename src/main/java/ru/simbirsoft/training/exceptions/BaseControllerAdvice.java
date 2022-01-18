@@ -21,6 +21,11 @@ public class BaseControllerAdvice {
         return response(HttpStatus.NOT_FOUND, e);
     }
 
+    @ExceptionHandler(NoPermissionException.class)
+    public Object noPermissionException(NoPermissionException e) {
+        return response(HttpStatus.FORBIDDEN, e);
+    }
+
     private Object response (HttpStatus status, AbstractException e) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);

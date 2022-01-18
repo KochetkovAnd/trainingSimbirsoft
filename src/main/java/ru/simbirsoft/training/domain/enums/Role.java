@@ -9,20 +9,51 @@ import java.util.stream.Collectors;
 
 public enum Role {
     USER(new HashSet<Permission>(){{
+        add(Permission.ROOMS_CREATE_PUBLIC);
+        add(Permission.ROOMS_CREATE_PRIVATE);
 
+        add(Permission.CONNECTION_CREATE);
+
+        add(Permission.MESSAGE_SEND);
+        add(Permission.MESSAGE_GET);
     }}),
 
     MODER(new HashSet<Permission>(){{
         add(Permission.USERS_BLOCK);
         add(Permission.USERS_UNBLOCK);
-    }}),
 
+        add(Permission.ROOMS_CREATE_PUBLIC);
+        add(Permission.ROOMS_CREATE_PRIVATE);
+
+        add(Permission.CONNECTION_CREATE);
+
+        add(Permission.MESSAGE_SEND);
+        add(Permission.MESSAGE_GET);
+        add(Permission.MESSAGE_REMOVE);
+    }}),
 
     ADMIN(new HashSet<Permission>(){{
         add(Permission.USERS_BLOCK);
         add(Permission.USERS_UNBLOCK);
         add(Permission.USERS_MAKE_MODERATOR);
         add(Permission.USERS_REMOVE_MODERATOR);
+
+        add(Permission.ROOMS_CREATE_PUBLIC);
+        add(Permission.ROOMS_CREATE_PRIVATE);
+        add(Permission.ROOMS_RENAME);
+
+        add(Permission.CONNECTION_CREATE);
+        add(Permission.CONNECTION_REMOVE);
+
+        add(Permission.MESSAGE_SEND);
+        add(Permission.MESSAGE_GET);
+        add(Permission.MESSAGE_REMOVE);
+    }}),
+
+    BLOCKED(new HashSet<Permission>(){{
+
+        add(Permission.MESSAGE_GET);
+
     }});
 
     private final Set<Permission> permissions;

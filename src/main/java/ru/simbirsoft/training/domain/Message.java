@@ -3,7 +3,7 @@ package ru.simbirsoft.training.domain;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.util.Date;
 
 @Entity
 @Table(name = "message")
@@ -16,7 +16,7 @@ public class Message {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_room_id")
+    @JoinColumn(name = "connection_id")
     private Connection connection;
 
     @Column(name = "text")

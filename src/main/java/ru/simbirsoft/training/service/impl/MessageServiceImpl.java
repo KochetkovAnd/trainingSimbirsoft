@@ -1,16 +1,20 @@
 package ru.simbirsoft.training.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.Message;
 import ru.simbirsoft.training.dto.MessageDTO;
+import ru.simbirsoft.training.dto.MessageIdDTO;
 import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.MessageMapper;
+import ru.simbirsoft.training.repository.ConnectionRepository;
 import ru.simbirsoft.training.repository.MessageRepository;
 import ru.simbirsoft.training.service.MessageService;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -18,15 +22,18 @@ import java.util.List;
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
+    private final ConnectionRepository connectionRepository;
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('message:get')")
     public List<MessageDTO> getAll() {
         return allToDTO(messageRepository.findAll());
     }
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('message:get')")
     public MessageDTO getById(Long id) {
         if (messageRepository.findById(id).isPresent()) {
             return toDTO(messageRepository.getById(id));
@@ -37,8 +44,11 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public MessageDTO create(MessageDTO messageDTO) {
-        messageRepository.save(toEntity(messageDTO));
-        return messageDTO;
+        if (connectionRepository.findById(messageDTO.getConnection().getId()).isPresent()) {
+            messageRepository.save(toEntity(messageDTO));
+            return messageDTO;
+        }
+        throw new ResourceNotFoundException("No connection found with id = " + messageDTO.getConnection().getId(), "");
     }
 
     @Override
@@ -53,11 +63,30 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('message:remove')")
     public boolean deleteById(Long id) {
         if(messageRepository.findById(id).isPresent()) {
             messageRepository.deleteById(id);
+            return (messageRepository.findById(id).isPresent());
         }
-        return (messageRepository.findById(id).isPresent());
+        throw new ResourceNotFoundException("No message found with id = " + id, "");
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @PreAuthorize("hasAuthority('message:send')")
+    public MessageDTO createById(MessageIdDTO messageIdDTO) {
+        if (connectionRepository.findById(messageIdDTO.getConnection_id()).isPresent()) {
+
+            MessageDTO messageDTO = new MessageDTO(messageIdDTO.getId(),
+                    connectionRepository.getById(messageIdDTO.getConnection_id()),
+                    messageIdDTO.getText(),
+                    new Date());
+
+            messageRepository.save(toEntity(messageDTO));
+            return messageDTO;
+        }
+        throw new ResourceNotFoundException("No connection found with id = " + messageIdDTO.getConnection_id(), "");
     }
 
     private Message toEntity(MessageDTO messageDTO){

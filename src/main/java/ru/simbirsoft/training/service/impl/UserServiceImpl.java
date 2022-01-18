@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.User;
 import ru.simbirsoft.training.domain.enums.Role;
-import ru.simbirsoft.training.domain.enums.Status;
 import ru.simbirsoft.training.dto.UserDTO;
 import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.UserMapper;
@@ -77,7 +76,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findById(id).isPresent()){
             UserDTO userDTO = getById(id);
             userDTO.setId(id);
-            userDTO.setStatus(Status.BANNED);
+            userDTO.setRole(Role.BLOCKED);
             create(userDTO);
             return toDTO(userRepository.getById(id));
         }
@@ -91,7 +90,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findById(id).isPresent()){
             UserDTO userDTO = getById(id);
             userDTO.setId(id);
-            userDTO.setStatus(Status.ACTIVE);
+            userDTO.setRole(Role.USER);
             create(userDTO);
             return toDTO(userRepository.getById(id));
         }
@@ -142,4 +141,3 @@ public class UserServiceImpl implements UserService {
         return UserMapper.USER_MAPPER.allToDTO(userList);
     }
 }
-
