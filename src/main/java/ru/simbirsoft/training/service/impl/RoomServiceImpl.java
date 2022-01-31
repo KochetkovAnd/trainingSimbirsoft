@@ -7,14 +7,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ru.simbirsoft.training.domain.Connection;
 import ru.simbirsoft.training.domain.Room;
 import ru.simbirsoft.training.domain.User;
 import ru.simbirsoft.training.domain.enums.Permission;
 import ru.simbirsoft.training.domain.enums.RoomType;
+import ru.simbirsoft.training.dto.ConnectionDTO;
 import ru.simbirsoft.training.dto.RoomDTO;
 import ru.simbirsoft.training.exceptions.NoPermissionException;
 import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.mapper.RoomMapper;
+import ru.simbirsoft.training.repository.ConnectionRepository;
+import ru.simbirsoft.training.repository.MessageRepository;
 import ru.simbirsoft.training.repository.RoomRepository;
 import ru.simbirsoft.training.repository.UserRepository;
 import ru.simbirsoft.training.service.RoomService;
@@ -25,8 +29,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RoomServiceImpl implements RoomService {
 
-    private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    private final ConnectionRepository connectionRepository;
+    private final MessageRepository messageRepository;
+
+    private final UserServiceImpl userService;
+    private final ConnectionServiceImpl connectionService;
+
+
 
     @Override
     @Transactional(readOnly = true)
@@ -63,6 +74,11 @@ public class RoomServiceImpl implements RoomService {
     @Transactional
     public boolean deleteById(Long id) {
         if(roomRepository.findById(id).isPresent()) {
+
+            for (Connection connection : connectionRepository.findConnectionsByRoom(roomRepository.getById(id))) {
+                messageRepository.deleteMessagesByConnection(connection);
+            }
+            connectionRepository.deleteConnectionsByRoom(roomRepository.getById(id));
             roomRepository.deleteById(id);
         }
         return (roomRepository.findById(id).isPresent());
@@ -71,60 +87,84 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @PreAuthorize("hasAuthority('rooms:create_public')")
-    public RoomDTO createPublic(RoomDTO roomDTO) {
+    public RoomDTO createPublic(String name) {
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        roomDTO.setOwner(userRepository.findByName(securityUser.getUsername()));
-        roomDTO.setType(RoomType.PUBLIC);
-        roomRepository.save(toEntity(roomDTO));
-        return roomDTO;
+        User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
+        if (!userService.checkBan(userCurrent)) {
+            RoomDTO roomDTO = new RoomDTO();
+            roomDTO.setName(name);
+            roomDTO.setOwner(userRepository.findByName(securityUser.getUsername()).get());
+            roomDTO.setType(RoomType.PUBLIC);
+            roomRepository.save(toEntity(roomDTO));
+
+            connectionService.create(
+                    new ConnectionDTO(null,
+                            userRepository.findByName(securityUser.getUsername()).get(),
+                            roomRepository.findByName(name).get(),
+                            null
+                    )
+            );
+
+            return roomDTO;
+        }
+        throw new NoPermissionException("No permission to create public room", "");
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @PreAuthorize("hasAuthority('rooms:create_private')")
-    public RoomDTO createPrivate(RoomDTO roomDTO) {
+    public RoomDTO createPrivate(String name) {
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        roomDTO.setOwner(userRepository.findByName(securityUser.getUsername()));
-        roomDTO.setType(RoomType.PRIVATE);
-        roomRepository.save(toEntity(roomDTO));
-        return roomDTO;
+        User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
+        if (!userService.checkBan(userCurrent)) {
+            RoomDTO roomDTO = new RoomDTO();
+            roomDTO.setName(name);
+            roomDTO.setOwner(userRepository.findByName(securityUser.getUsername()).get());
+            roomDTO.setType(RoomType.PRIVATE);
+            roomRepository.save(toEntity(roomDTO));
+
+            connectionService.create(
+                    new ConnectionDTO(null,
+                            userRepository.findByName(securityUser.getUsername()).get(),
+                            roomRepository.findByName(name).get(),
+                            null
+                    )
+            );
+
+            return roomDTO;
+        }
+        throw new NoPermissionException("No permission to create private room", "");
     }
 
     @Override
     @Transactional
-    public RoomDTO rename(RoomDTO roomDTO) {
-        if (roomRepository.findById(roomDTO.getId()).isPresent()) {
-
-
-            UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userRepository.findByName(securityUser.getUsername());
-
-            if (user.equals(roomRepository.getById(roomDTO.getId()).getOwner()) || user.getRole().getPermissions().contains(Permission.ROOMS_RENAME)) {
-                RoomDTO roomDTO1 = getById(roomDTO.getId());
-                roomDTO1.setId(roomDTO.getId());
-                roomDTO1.setName(roomDTO.getName());
-                /*                List<SimpleGrantedAuthority> authorities = securityUser.getAuthorities().stream()
-                        .filter(grantedAuthority -> grantedAuthority instanceof SimpleGrantedAuthority)
-                        .map(grantedAuthority -> (SimpleGrantedAuthority) grantedAuthority)
-                        .collect(Collectors.toList());
-
-                System.out.println((authorities.stream().anyMatch(authority-> authority.getAuthority().equals(Permission.ROOMS_RENAME.getPermission()))));
-
-                authorities.forEach(authority-> {
-                    if(authority.equals(Permission.ROOMS_RENAME.getPermission())) {
-
-                    }
-                });
-
-                Set<Permission> authorities = userRepository.findByName(securityUser.getUsername()).getRole().getPermissions();
-                System.out.println(authorities);
-                System.out.println(authorities.contains(Permission.ROOMS_RENAME));*/
-                return create(roomDTO1);
-
+    public RoomDTO rename(String oldName, String newName) {
+        UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByName(securityUser.getUsername()).get();
+        if (!userService.checkBan(user)) {
+            if (roomRepository.findByName(oldName).isPresent()) {
+                if (user.equals(roomRepository.findByName(oldName).get().getOwner()) || user.getRole().getPermissions().contains(Permission.ROOMS_RENAME)) {
+                    Room room = roomRepository.findByName(oldName).get();
+                    RoomDTO roomDTO = toDTO(room);
+                    roomDTO.setId(room.getId());
+                    roomDTO.setName(newName);
+                    return create(roomDTO);
+                }
+                throw new NoPermissionException("No permission to room with name = " + oldName, "");
             }
-            throw new NoPermissionException("No permission to room with id = " + roomDTO.getId(), "");
+            throw new ResourceNotFoundException("No room found with name = " + oldName, "");
         }
-        throw new ResourceNotFoundException("No room found with id = " + roomDTO.getId(), "");
+        throw new NoPermissionException("No permission to room with name = " + oldName, "");
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteByName(String name) {
+
+        if (roomRepository.findByName(name).isPresent()) {
+            deleteById(roomRepository.findByName(name).get().getId());
+        }
+        return (roomRepository.findByName(name).isPresent());
     }
 
 

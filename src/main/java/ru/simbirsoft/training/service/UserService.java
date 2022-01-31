@@ -12,8 +12,12 @@ public interface UserService {
     UserDTO create(UserDTO userDto);
     UserDTO update(UserDTO userDto);
     boolean deleteById(Long id);
-    UserDTO blockById(Long id);
-    UserDTO unblockById(Long id);
-    UserDTO makeModer(Long id);
-    UserDTO removeModer(Long id);
+
+    UserDTO makeModer(String username);
+    UserDTO removeModer(String username);
+
+    UserDTO rename(String oldName, String newName);
+
+    boolean block(String username, Long minutes);
+    UserDTO unblock(String username);
 }

@@ -15,51 +15,55 @@ public class UserRestController {
 
     private final UserServiceImpl userServiceImpl;
 
-    @GetMapping
+    //@GetMapping
     public List<UserDTO> getAll() {
         return userServiceImpl.getAll();
     }
 
-    @GetMapping("/getById")
-    public UserDTO getById(@RequestParam(name = "id") Long id){
+    //@GetMapping("/getById/{id}")
+    public UserDTO getById(@PathVariable Long id){
         if(id != null){
             return userServiceImpl.getById(id);
         }
         return null;
     }
 
-    @PostMapping("/create")
+    //@PostMapping("/create")
     UserDTO create(@RequestBody UserDTO userDTO){
         return userServiceImpl.create(userDTO);
     }
 
-    @PostMapping("/update")
+    //@PostMapping("/update")
     UserDTO update(@RequestBody UserDTO userDTO){
         return userServiceImpl.update(userDTO);
     }
 
-    @DeleteMapping("/deleteById")
-    public boolean deleteById(@RequestParam(name = "id") Long id){
+    //@DeleteMapping("/deleteById/{id}")
+    public boolean deleteById(@PathVariable Long id){
         return userServiceImpl.deleteById(id);
     }
 
-    @GetMapping("/blockById")
-    UserDTO blockById(@RequestParam(name = "id") Long id){
-        return userServiceImpl.blockById(id);
+    @PostMapping("/makeModer/{username}")
+    UserDTO makeModer(@PathVariable String username){
+        return userServiceImpl.makeModer(username);
     }
 
-    @GetMapping("/unblockById")
-    UserDTO unblockById(@RequestParam(name = "id") Long id){
-        return userServiceImpl.unblockById(id);
+    @PostMapping("/removeModer/{username}")
+    UserDTO removeModer(@PathVariable String username){
+        return userServiceImpl.removeModer(username);
     }
 
-    @GetMapping("/makeModerById")
-    UserDTO makeModerById(@RequestParam(name = "id") Long id){
-        return userServiceImpl.makeModer(id);
+    @PostMapping("/rename/{oldName}/{newName}")
+    UserDTO rename(@PathVariable String oldName, @PathVariable String newName){
+        return userServiceImpl.rename(oldName, newName);
     }
 
-    @GetMapping("/removeModerById")
-    UserDTO removeModerById(@RequestParam(name = "id") Long id){
-        return userServiceImpl.removeModer(id);
+    @PutMapping("/block/{username}/{minutes}")
+    public boolean block(@PathVariable String username,@PathVariable Long minutes){
+        return userServiceImpl.block(username, minutes);
+    }
+    @PutMapping("/unblock/{username}")
+    public UserDTO unblock(@PathVariable String username){
+        return userServiceImpl.unblock(username);
     }
 }

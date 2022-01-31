@@ -14,46 +14,51 @@ public class RoomRestController {
 
     private final RoomServiceImpl roomServiceImpl;
 
-    @GetMapping
+    //@GetMapping
     public List<RoomDTO> getAll() {
         return roomServiceImpl.getAll();
     }
 
-    @GetMapping("/getById")
-    public RoomDTO getById(@RequestParam(name = "id") Long id){
+    //@GetMapping("/getById/{id}")
+    public RoomDTO getById(@PathVariable Long id){
         if(id != null){
             return roomServiceImpl.getById(id);
         }
         return null;
     }
 
-    @PostMapping("/create")
+    //@PostMapping("/create")
     RoomDTO create(@RequestBody RoomDTO roomDTO){
         return roomServiceImpl.create(roomDTO);
     }
 
-    @PostMapping("/update")
+    //@PostMapping("/update")
     RoomDTO update(@RequestBody RoomDTO roomDTO){
         return roomServiceImpl.update(roomDTO);
     }
 
-    @DeleteMapping("/deleteById")
-    public boolean deleteById(@RequestParam(name = "id") Long id){
+    //@DeleteMapping("/deleteById/{id}")
+    public boolean deleteById(@PathVariable Long id){
         return roomServiceImpl.deleteById(id);
     }
 
-    @PostMapping("/createPublic")
-    RoomDTO createPublic(@RequestBody RoomDTO roomDTO){
-        return roomServiceImpl.createPublic(roomDTO);
+    @DeleteMapping("/deleteByName/{name}")
+    public boolean deleteByName(@PathVariable String name){
+        return roomServiceImpl.deleteByName(name);
     }
 
-    @PostMapping("/createPrivate")
-    RoomDTO createPrivate(@RequestBody RoomDTO roomDTO){
-        return roomServiceImpl.createPrivate(roomDTO);
+    @PostMapping("/createPublic/{name}")
+    RoomDTO createPublic(@PathVariable String name){
+        return roomServiceImpl.createPublic(name);
     }
 
-    @PostMapping("/rename")
-    RoomDTO rename(@RequestBody RoomDTO roomDTO){
-        return roomServiceImpl.rename(roomDTO);
+    @PostMapping("/createPrivate/{name}")
+    RoomDTO createPrivate(@PathVariable String name){
+        return roomServiceImpl.createPrivate(name);
+    }
+
+    @PutMapping("/rename/{oldName}/{newName}")
+    RoomDTO rename(@PathVariable String oldName, @PathVariable String newName){
+        return roomServiceImpl.rename(oldName, newName);
     }
 }

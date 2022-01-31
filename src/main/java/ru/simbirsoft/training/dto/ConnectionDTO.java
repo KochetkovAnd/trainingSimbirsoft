@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import ru.simbirsoft.training.domain.Room;
 import ru.simbirsoft.training.domain.User;
 
+import java.util.Date;
+
 
 @Data
 @NoArgsConstructor
@@ -15,5 +17,6 @@ public class ConnectionDTO {
     private Long id;
     private User user;
     private Room room;
+    private Date disconnectUntil;
 
 }

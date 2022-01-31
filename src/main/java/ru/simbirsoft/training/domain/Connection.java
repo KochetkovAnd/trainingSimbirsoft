@@ -3,6 +3,7 @@ package ru.simbirsoft.training.domain;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "connection")
@@ -21,5 +22,8 @@ public class Connection {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "room_id")
     private Room room;
+
+    @JoinColumn(name = "disconnectUntil")
+    private Date disconnectUntil;
 
 }

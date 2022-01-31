@@ -13,8 +13,11 @@ public interface RoomService {
     RoomDTO create(RoomDTO roomDTO);
     RoomDTO update(RoomDTO roomDTO);
     boolean deleteById(Long id);
-    RoomDTO createPublic(RoomDTO roomDTO);
-    RoomDTO createPrivate(RoomDTO roomDTO);
-    RoomDTO rename(RoomDTO roomDTO);
 
+    RoomDTO createPublic(String name);
+    RoomDTO createPrivate(String name);
+
+    RoomDTO rename(String oldName, String newName);
+
+    boolean deleteByName(String name);
 }

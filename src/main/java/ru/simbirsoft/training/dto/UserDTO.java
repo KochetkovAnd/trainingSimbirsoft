@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.simbirsoft.training.domain.enums.Role;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,5 +17,6 @@ public class UserDTO {
     private String name;
     private String password;
     private Role role;
+    private Date bannedUntil;
 
 }

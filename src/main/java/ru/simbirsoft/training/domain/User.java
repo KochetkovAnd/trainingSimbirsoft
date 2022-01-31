@@ -3,6 +3,7 @@ package ru.simbirsoft.training.domain;
 import lombok.Data;
 import ru.simbirsoft.training.domain.enums.Role;
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "users")
@@ -23,5 +24,8 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     @Column(name = "role")
     private Role role;
+
+    @JoinColumn(name = "bannedUntil")
+    private Date bannedUntil;
 }
 
