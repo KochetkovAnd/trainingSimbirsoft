@@ -4,12 +4,15 @@ package ru.simbirsoft.training.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.simbirsoft.training.dto.Comment;
 import ru.simbirsoft.training.dto.Videos;
 import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
 import ru.simbirsoft.training.service.BotService;
 import ru.simbirsoft.training.utils.SearchVideoYoutube;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 
 @Service
@@ -98,60 +101,101 @@ public class BotServiceImpl implements BotService {
                 throw new ResourceNotFoundException(command + " command is not exist", "");
             }
 
-        } else if (command.startsWith("//yBot find")) {
+        } else if (command.startsWith("//yBot")) {
 
-            String channelId;
-            List<Videos> videosList;
-            String channelName;
-            String videoName;
-            boolean likes;
-            boolean views;
+            if (command.startsWith("//yBot find")) {
 
-            if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\}")) {
-                channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
-                likes = false;
-                views = false;
+                String channelId;
+                List<Videos> videosList;
+                String channelName;
+                String videoName;
+                boolean likes;
+                boolean views;
 
-            } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v")) {
-                channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
-                likes = false;
-                views = true;
+                if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\}")) {
+                    channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                    videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
+                    likes = false;
+                    views = false;
 
-            } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v -l")) {
-                channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
-                likes = true;
-                views = true;
+                } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v")) {
+                    channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                    videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
+                    likes = false;
+                    views = true;
+
+                } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v -l")) {
+                    channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                    videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
+                    likes = true;
+                    views = true;
+
+                } else {
+                    throw new ResourceNotFoundException(command + " command is not exist", "");
+                }
+
+                try {
+                    if (!channelName.isEmpty()) {
+                        channelId = searchVideoYoutube.getChannelId(channelName);
+                    } else {
+                        channelId = "";
+                    }
+                    videosList = searchVideoYoutube.getVideoList(videoName, channelId, Long.parseLong("1"), false, likes, views);
+                    return videosList;
+
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+
+            } else if (command.matches("\\/\\/yBot channelInfo \\{.+\\}")) {
+
+                String channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                return null;
+
+            } else if (command.matches("\\/\\/yBot videoCommentRandom \\{.+\\}\\|\\|\\{.+\\}")) {
+
+                String channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                String videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
+
+                String channelId;
+                List<Videos> videosList;
+
+
+                try {
+                    if (!channelName.isEmpty()) {
+                        channelId = searchVideoYoutube.getChannelId(channelName);
+                    } else {
+                        channelId = "";
+                    }
+                    videosList = searchVideoYoutube.getVideoList(videoName, channelId, Long.parseLong("1"), false, true, true);
+                    Map<String, String> map = searchVideoYoutube.getNameAndCommentMap(videosList.get(0), 100l);
+                    Random random = new Random();
+                    Comment comment = new Comment();
+                    comment.setUserName((String) map.keySet().toArray()[random.nextInt(map.size())]);
+                    comment.setText(map.get(comment.getUserName()));
+                    return comment;
+
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+
+                return null;
+
+            } else if (command.matches("\\/\\/yBot help")) {
+                String help =
+                        "//yBot find {channel_name}||{video_name}\n" +
+                                "//yBot find {channel_name}||{video_name} -v\n" +
+                                "//yBot find {channel_name}||{video_name} -v -l\n"+
+                                "//yBot channelInfo {channel_name}\n"+
+                                "//yBot videoCommentRandom {channel_name}||{video_name}";
+
+                return help;
 
             } else {
                 throw new ResourceNotFoundException(command + " command is not exist", "");
             }
 
-            try {
-                if (!channelName.isEmpty()) {
-                    channelId = searchVideoYoutube.getChannelId(channelName);
-                } else {
-                    channelId = "";
-                }
-                videosList = searchVideoYoutube.getVideoList(videoName, channelId, Long.parseLong("1"), false, likes, views);
-                return videosList;
-
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-            }
-
-
-
-        } else if (command.matches("\\/\\/yBot help")) {
-            String help =
-                    "//yBot find {channel_name}||{video_name}\n" +
-                            "//yBot find {channel_name}||{video_name} -v\n" +
-                            "//yBot find {channel_name}||{video_name} -v -l";
-            return help;
-
-        } else if (command.equals("//help")) {
+        }  else if (command.equals("//help")) {
 
             String help =
                     "//room create {room_name}\n"+
@@ -169,7 +213,10 @@ public class BotServiceImpl implements BotService {
                             "//user moderator -l {user name} -d\n" +
                             "//yBot find {channel_name}||{video_name}\n" +
                             "//yBot find {channel_name}||{video_name} -v\n" +
-                            "//yBot find {channel_name}||{video_name} -v -l";
+                            "//yBot find {channel_name}||{video_name} -v -l\n"+
+                            "//yBot channelInfo {channel_name}\n"+
+                            "//yBot videoCommentRandom {channel_name}||{video_name}";
+
             return help;
 
         }

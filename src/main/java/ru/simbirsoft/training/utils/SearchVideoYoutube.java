@@ -11,10 +11,7 @@ import org.springframework.stereotype.Component;
 import ru.simbirsoft.training.dto.Videos;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class SearchVideoYoutube {
@@ -117,5 +114,20 @@ public class SearchVideoYoutube {
             }
         }
         return  videosList;
+    }
+
+    public Map<String, String> getNameAndCommentMap(Videos videos, Long resultCount) throws Throwable {
+        Map<String, String> nameAndCommentMap = new LinkedHashMap<>();
+
+        CommentThreadListResponse videoCommentsListResponse = youTube.commentThreads()
+                .list("snippet").setKey(apikey).setVideoId(videos.getId()).setMaxResults(resultCount)
+                .setTextFormat("plainText").execute();
+        List<CommentThread> videoComments = videoCommentsListResponse.getItems();
+        CommentSnippet snippet;
+        for (CommentThread videoComment : videoComments) {
+            snippet = videoComment.getSnippet().getTopLevelComment().getSnippet();
+            nameAndCommentMap.put(snippet.getAuthorDisplayName(), snippet.getTextDisplay());
+        }
+        return nameAndCommentMap;
     }
 }
