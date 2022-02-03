@@ -32,42 +32,42 @@ public class BotServiceImpl implements BotService {
         if (command.startsWith("//room")) {
 
 
-            if (command.matches("\\/\\/room create \\{.+\\}")) {
+            if (command.matches("\\/\\/room create \\{.+\\}$")) {
                 String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 return roomService.createPublic(roomName);
 
-            } else if (command.matches("\\/\\/room create \\{.+\\} -c")) {
+            } else if (command.matches("\\/\\/room create \\{.+\\} -c$")) {
                 String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 return roomService.createPrivate(roomName);
 
-            } else if (command.matches("\\/\\/room rename \\{.+\\} \\{.+\\}")) {
+            } else if (command.matches("\\/\\/room rename \\{.+\\} \\{.+\\}$")) {
                 String oldName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 String newName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
                 return roomService.rename(oldName, newName);
 
-            } else if(command.matches("\\/\\/room remove \\{.+\\}")) {
+            } else if(command.matches("\\/\\/room remove \\{.+\\}$")) {
                 String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 return roomService.deleteByName(roomName);
 
-            } else if(command.matches("\\/\\/room connect \\{.+\\} -l \\{.+\\}")) {
+            } else if(command.matches("\\/\\/room connect \\{.+\\} -l \\{.+\\}$")) {
                 String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 String userName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
                 return connectionService.createOther(userName, roomName);
 
-            } else if(command.matches("\\/\\/room disconnect \\{.+\\}")) {
-                String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                return connectionService.disconnectSelf(roomName);
-
-            } else if(command.matches("\\/\\/room disconnect \\{.+\\} -l \\{.+\\}")) {
-                String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                String userName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
-                return connectionService.disconnectOther(userName, roomName, null);
-
-            } else if(command.matches("\\/\\/room disconnect \\{.+\\} -l \\{.+\\} -m \\{.+\\}")) {
+            } else if(command.matches("\\/\\/room disconnect \\{.+\\} -l \\{.+\\} -m \\{.+\\}$")) {
                 String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 String userName = command.substring(command.indexOf("}" + 1)).substring(command.indexOf("{") + 1, command.indexOf("}"));
                 Long time = Long.parseLong(command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}")));
                 return connectionService.disconnectOther(userName, roomName, time);
+
+            } else if(command.matches("\\/\\/room disconnect \\{.+\\} -l \\{.+\\}$")) {
+                String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                String userName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
+                return connectionService.disconnectOther(userName, roomName, null);
+
+            } else if(command.matches("\\/\\/room disconnect \\{.+\\}$")) {
+                String roomName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                return connectionService.disconnectSelf(roomName);
 
             } else {
                 throw new ResourceNotFoundException(command + " command is not exist", "");
@@ -75,25 +75,25 @@ public class BotServiceImpl implements BotService {
 
         } else if (command.startsWith("//user")) {
 
-            if (command.matches("\\/\\/user rename \\{.+\\} \\{.+\\}")) {
+            if (command.matches("\\/\\/user rename \\{.+\\} \\{.+\\}$")) {
                 String oldName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 String newName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
                 return userService.rename(oldName, newName);
 
-            } else if (command.matches("\\/\\/user ban -l \\{.+\\}")) {
-                String userName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                return userService.block(userName, null);
-
-            } else if (command.matches("\\/\\/user ban -l \\{.+\\} -m \\{.+\\}")) {
+            } else if (command.matches("\\/\\/user ban -l \\{.+\\} -m \\{.+\\}$")) {
                 String userName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 Long time = Long.parseLong(command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}")));
                 return userService.block(userName, time);
 
-            } else if (command.matches("\\/\\/user moderator \\{.+\\} -n")) {
+            } else if (command.matches("\\/\\/user ban -l \\{.+\\}$")) {
+                String userName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
+                return userService.block(userName, null);
+
+            }  else if (command.matches("\\/\\/user moderator \\{.+\\} -n$")) {
                 String userName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 return userService.makeModer(userName);
 
-            } else if (command.matches("\\/\\/user moderator \\{.+\\} -d")) {
+            } else if (command.matches("\\/\\/user moderator \\{.+\\} -d$")) {
                 String userName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 return userService.makeModer(userName);
 
@@ -112,19 +112,19 @@ public class BotServiceImpl implements BotService {
                 boolean likes;
                 boolean views;
 
-                if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\}")) {
+                if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\}$")) {
                     channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                     videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
                     likes = false;
                     views = false;
 
-                } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v")) {
+                } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v$")) {
                     channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                     videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
                     likes = false;
                     views = true;
 
-                } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v -l")) {
+                } else if (command.matches("\\/\\/yBot find \\{.+\\}\\|\\|\\{.+\\} -v -l$")) {
                     channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                     videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
                     likes = true;
@@ -147,7 +147,7 @@ public class BotServiceImpl implements BotService {
                     throwable.printStackTrace();
                 }
 
-            } else if (command.matches("\\/\\/yBot channelInfo \\{.+\\}")) {
+            } else if (command.matches("\\/\\/yBot channelInfo \\{.+\\}$")) {
 
                 String channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 String channelId;
@@ -166,7 +166,7 @@ public class BotServiceImpl implements BotService {
                     throwable.printStackTrace();
                 }
 
-            } else if (command.matches("\\/\\/yBot videoCommentRandom \\{.+\\}\\|\\|\\{.+\\}")) {
+            } else if (command.matches("\\/\\/yBot videoCommentRandom \\{.+\\}\\|\\|\\{.+\\}$")) {
 
                 String channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
                 String videoName = command.substring(command.lastIndexOf("{") + 1, command.lastIndexOf("}"));
@@ -195,7 +195,7 @@ public class BotServiceImpl implements BotService {
 
                 return null;
 
-            } else if (command.matches("\\/\\/yBot help")) {
+            } else if (command.matches("\\/\\/yBot help$")) {
                 String help =
                         "//yBot find {channel_name}||{video_name}\n" +
                                 "//yBot find {channel_name}||{video_name} -v\n" +

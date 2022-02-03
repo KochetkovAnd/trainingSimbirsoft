@@ -48,10 +48,10 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional(readOnly = true)
     public RoomDTO getById(Long id) {
-        if (roomRepository.findById(id).isPresent()) {
-            return toDTO(roomRepository.getById(id));
+        if (!(roomRepository.findById(id).isPresent())) {
+            throw new ResourceNotFoundException("Room with id = " + id + " not found", "");
         }
-        throw new ResourceNotFoundException("No room found with id = " + id, "");
+        return toDTO(roomRepository.getById(id));
     }
 
     @Override
@@ -64,10 +64,10 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public RoomDTO update(RoomDTO roomDTO) {
-        if (roomRepository.findById(roomDTO.getId()).isPresent()){
-            return create(roomDTO);
+        if (!(roomRepository.findById(roomDTO.getId()).isPresent())) {
+            throw new ResourceNotFoundException("Room with id = " + roomDTO.getId() + " not found", "");
         }
-        throw new ResourceNotFoundException("No room found with id = " + roomDTO.getId(), "");
+        return create(roomDTO);
     }
 
     @Override
@@ -90,71 +90,73 @@ public class RoomServiceImpl implements RoomService {
     public RoomDTO createPublic(String name) {
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!userService.checkBan(userCurrent)) {
-            RoomDTO roomDTO = new RoomDTO();
-            roomDTO.setName(name);
-            roomDTO.setOwner(userRepository.findByName(securityUser.getUsername()).get());
-            roomDTO.setType(RoomType.PUBLIC);
-            roomRepository.save(toEntity(roomDTO));
-
-            connectionService.create(
-                    new ConnectionDTO(null,
-                            userRepository.findByName(securityUser.getUsername()).get(),
-                            roomRepository.findByName(name).get(),
-                            null
-                    )
-            );
-
-            return roomDTO;
+        if (userService.checkBan(userCurrent)) {
+            throw new NoPermissionException("You are banned", "");
         }
-        throw new NoPermissionException("No permission to create public room", "");
+        RoomDTO roomDTO = new RoomDTO();
+        roomDTO.setName(name);
+        roomDTO.setOwner(userCurrent);
+        roomDTO.setType(RoomType.PUBLIC);
+        roomRepository.save(toEntity(roomDTO));
+
+        connectionService.create(
+                new ConnectionDTO(null,
+                        userCurrent,
+                        roomRepository.findByName(name).get(),
+                        null
+                )
+        );
+
+        return roomDTO;
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @PreAuthorize("hasAuthority('rooms:create_private')")
     public RoomDTO createPrivate(String name) {
+
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!userService.checkBan(userCurrent)) {
-            RoomDTO roomDTO = new RoomDTO();
-            roomDTO.setName(name);
-            roomDTO.setOwner(userRepository.findByName(securityUser.getUsername()).get());
-            roomDTO.setType(RoomType.PRIVATE);
-            roomRepository.save(toEntity(roomDTO));
-
-            connectionService.create(
-                    new ConnectionDTO(null,
-                            userRepository.findByName(securityUser.getUsername()).get(),
-                            roomRepository.findByName(name).get(),
-                            null
-                    )
-            );
-
-            return roomDTO;
+        if (userService.checkBan(userCurrent)) {
+            throw new NoPermissionException("You are banned", "");
         }
-        throw new NoPermissionException("No permission to create private room", "");
+        RoomDTO roomDTO = new RoomDTO();
+        roomDTO.setName(name);
+        roomDTO.setOwner(userCurrent);
+        roomDTO.setType(RoomType.PRIVATE);
+        roomRepository.save(toEntity(roomDTO));
+
+        connectionService.create(
+                new ConnectionDTO(null,
+                        userCurrent,
+                        roomRepository.findByName(name).get(),
+                        null
+                )
+        );
+
+        return roomDTO;
     }
 
     @Override
     @Transactional
     public RoomDTO rename(String oldName, String newName) {
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findByName(securityUser.getUsername()).get();
-        if (!userService.checkBan(user)) {
-            if (roomRepository.findByName(oldName).isPresent()) {
-                if (user.equals(roomRepository.findByName(oldName).get().getOwner()) || user.getRole().getPermissions().contains(Permission.ROOMS_RENAME)) {
-                    Room room = roomRepository.findByName(oldName).get();
-                    RoomDTO roomDTO = toDTO(room);
-                    roomDTO.setId(room.getId());
-                    roomDTO.setName(newName);
-                    return create(roomDTO);
-                }
-                throw new NoPermissionException("No permission to room with name = " + oldName, "");
-            }
-            throw new ResourceNotFoundException("No room found with name = " + oldName, "");
+        User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
+        if (userService.checkBan(userCurrent)) {
+            throw new NoPermissionException("You are banned", "");
         }
-        throw new NoPermissionException("No permission to room with name = " + oldName, "");
+
+        if (!(roomRepository.findByName(oldName).isPresent())) {
+            throw new ResourceNotFoundException("Room with name = " + oldName + " not found", "");
+        }
+        Room room = roomRepository.findByName(oldName).get();
+        if (!(userCurrent.equals(room.getOwner()) || userCurrent.getRole().getPermissions().contains(Permission.ROOMS_RENAME))) {
+            throw new NoPermissionException("No permission to room with name = " + oldName, "");
+        }
+        RoomDTO roomDTO = toDTO(room);
+        roomDTO.setId(room.getId());
+        roomDTO.setName(newName);
+        return create(roomDTO);
     }
 
     @Override

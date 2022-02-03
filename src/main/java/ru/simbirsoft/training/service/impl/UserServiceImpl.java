@@ -41,10 +41,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDTO getById(Long id) {
-        if (userRepository.findById(id).isPresent()){
-            return toDTO(userRepository.getById(id));
+        if (!(userRepository.findById(id).isPresent())){
+            throw new ResourceNotFoundException("User with id = " + id + " not found", "");
         }
-        throw new ResourceNotFoundException("No user found with id = " + id, "");
+        return toDTO(userRepository.getById(id));
     }
 
     @Override
@@ -57,11 +57,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDTO update(UserDTO userDTO) {
-        if (userRepository.findById(userDTO.getId()).isPresent()){
-            create(userDTO);
-            return toDTO(userRepository.findByName(userDTO.getName()).get());
+        if (!(userRepository.findById(userDTO.getId()).isPresent())){
+            throw new ResourceNotFoundException("User with id = " + userDTO.getId() + " not found", "");
         }
-        throw new ResourceNotFoundException("No user found with id = " + userDTO.getId(), "");
+        return create(userDTO);
     }
 
     @Override
@@ -83,58 +82,60 @@ public class UserServiceImpl implements UserService {
     public UserDTO makeModer(String username) {
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!checkBan(userCurrent)) {
-            if (userRepository.findByName(username).isPresent()){
-                User user = userRepository.findByName(username).get();
-                UserDTO userDTO = toDTO(user);
-                userDTO.setId(user.getId());
-                userDTO.setRole(Role.MODER);
-                create(userDTO);
-                return toDTO(userRepository.findByName(username).get());
-            }
-            throw new ResourceNotFoundException("No user found with name = " + username, "");
+        if (checkBan(userCurrent)) {
+            throw new NoPermissionException("You are banned", "");
         }
-        throw new NoPermissionException("No permission to rename user with userName = " + username, "");
+        if (!(userRepository.findByName(username).isPresent())) {
+            throw new ResourceNotFoundException("User with userName = " + username + " not found", "");
+        }
+        User user = userRepository.findByName(username).get();
+        UserDTO userDTO = toDTO(user);
+        userDTO.setId(user.getId());
+        userDTO.setRole(Role.MODER);
+        create(userDTO);
+        return toDTO(userRepository.findByName(username).get());
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('users:remove_moderator')")
     public UserDTO removeModer(String username) {
+
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!checkBan(userCurrent)) {
-            if (userRepository.findByName(username).isPresent()){
-                User user = userRepository.findByName(username).get();
-                UserDTO userDTO = toDTO(user);
-                userDTO.setId(user.getId());
-                userDTO.setRole(Role.USER);
-                create(userDTO);
-                return toDTO(userRepository.findByName(username).get());
-            }
-            throw new ResourceNotFoundException("No user found with name = " + username, "");
+        if (checkBan(userCurrent)) {
+            throw new NoPermissionException("You are banned", "");
         }
-        throw new NoPermissionException("No permission to rename user with userName = " + username, "");
+        if (!(userRepository.findByName(username).isPresent())) {
+            throw new ResourceNotFoundException("User with userName = " + username + " not found", "");
+        }
+        User user = userRepository.findByName(username).get();
+        UserDTO userDTO = toDTO(user);
+        userDTO.setId(user.getId());
+        userDTO.setRole(Role.USER);
+        create(userDTO);
+        return toDTO(userRepository.findByName(username).get());
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('users:rename')")
     public UserDTO rename(String oldName, String newName) {
+
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!checkBan(userCurrent)) {
-            if (userRepository.findByName(oldName).isPresent()) {
-                User user = userRepository.findByName(oldName).get();
-                UserDTO userDTO = toDTO(user);
-                userDTO.setId(user.getId());
-                userDTO.setName(newName);
-                return create(userDTO);
-            }
-            throw new ResourceNotFoundException("No user found with name = " + oldName, "");
+        if (checkBan(userCurrent)) {
+            throw new NoPermissionException("No permission to rename user with userName = " + oldName, "");
         }
-        throw new NoPermissionException("No permission to rename user with userName = " + oldName, "");
 
+        if (!(userRepository.findByName(oldName).isPresent())) {
+            throw new ResourceNotFoundException("User with userName = " + oldName + " not found", "");
+        }
+        User user = userRepository.findByName(oldName).get();
+        UserDTO userDTO = toDTO(user);
+        userDTO.setId(user.getId());
+        userDTO.setName(newName);
+        return create(userDTO);
     }
 
     @Override
@@ -143,44 +144,45 @@ public class UserServiceImpl implements UserService {
     public boolean block(String username, Long minutes) {
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!checkBan(userCurrent)) {
-            if (userRepository.findByName(username).isPresent()) {
-                User user = userRepository.findByName(username).get();
-                UserDTO userDTO = toDTO(user);
-                userDTO.setId(user.getId());
-                Date date;
-                if (minutes != null) {
-                    date = new Date(new Date().getTime() + minutes * 60 * 1000);
-                } else {
-                    date = foreverBanDate;
-                }
-                userDTO.setBannedUntil(date);
-                create(userDTO);
-                return userRepository.findByName(username).isPresent();
-            }
-            throw new ResourceNotFoundException("No user found with name = " + username, "");
+        if (checkBan(userCurrent)) {
+            throw new NoPermissionException("No permission to rename user with userName = " + username, "");
         }
-        throw new NoPermissionException("No permission to block user with name = " + username, "");
+        if (!(userRepository.findByName(username).isPresent())) {
+            throw new ResourceNotFoundException("User with userName = " + username + " not found", "");
+        }
+        User user = userRepository.findByName(username).get();
+        UserDTO userDTO = toDTO(user);
+        userDTO.setId(user.getId());
+        Date date;
+        if (minutes != null) {
+            date = new Date(new Date().getTime() + minutes * 60 * 1000);
+        } else {
+            date = foreverBanDate;
+        }
+        userDTO.setBannedUntil(date);
+        create(userDTO);
+        return userRepository.findByName(username).isPresent();
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('users:unblock')")
     public UserDTO unblock(String username) {
+
         UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userCurrent = userRepository.findByName(securityUser.getUsername()).get();
-        if (!checkBan(userCurrent)) {
-            if (userRepository.findByName(username).isPresent()) {
-                User user = userRepository.findByName(username).get();
-                UserDTO userDTO = toDTO(user);
-                userDTO.setId(user.getId());
-                userDTO.setBannedUntil(null);
-                create(userDTO);
-                return toDTO(userRepository.findByName(username).get());
-            }
-            throw new ResourceNotFoundException("No user found with name = " + username, "");
+        if (checkBan(userCurrent)) {
+            throw new NoPermissionException("No permission to rename user with userName = " + username, "");
         }
-        throw new NoPermissionException("No permission to block user with name = " + username, "");
+        if (!(userRepository.findByName(username).isPresent())) {
+            throw new ResourceNotFoundException("User with userName = " + username + " not found", "");
+        }
+        User user = userRepository.findByName(username).get();
+        UserDTO userDTO = toDTO(user);
+        userDTO.setId(user.getId());
+        userDTO.setBannedUntil(null);
+        create(userDTO);
+        return toDTO(userRepository.findByName(username).get());
     }
 
     private User toEntity(UserDTO userDto){

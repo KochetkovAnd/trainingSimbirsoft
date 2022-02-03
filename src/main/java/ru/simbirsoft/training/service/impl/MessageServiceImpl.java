@@ -7,7 +7,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ru.simbirsoft.training.domain.Connection;
 import ru.simbirsoft.training.domain.Message;
+import ru.simbirsoft.training.domain.Room;
 import ru.simbirsoft.training.domain.User;
 import ru.simbirsoft.training.dto.MessageDTO;
 import ru.simbirsoft.training.exceptions.NoPermissionException;
@@ -43,87 +45,80 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional(readOnly = true)
     public MessageDTO getById(Long id) {
-        if (messageRepository.findById(id).isPresent()) {
-            return toDTO(messageRepository.getById(id));
+        if (!(messageRepository.findById(id).isPresent())) {
+            throw new ResourceNotFoundException("Message with id = " + id + " not found", "");
         }
-        throw new ResourceNotFoundException("No message found with id = " + id, "");
+        return toDTO(messageRepository.getById(id));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public MessageDTO create(MessageDTO messageDTO) {
-        if (connectionRepository.findById(messageDTO.getConnection().getId()).isPresent()) {
-            messageRepository.save(toEntity(messageDTO));
-            return messageDTO;
+        if (!(connectionRepository.findById(messageDTO.getConnection().getId()).isPresent())) {
+            throw new ResourceNotFoundException("Connection with id = " + messageDTO.getConnection().getId() + " not found", "");
         }
-        throw new ResourceNotFoundException("No connection found with id = " + messageDTO.getConnection().getId(), "");
+        messageRepository.save(toEntity(messageDTO));
+        return messageDTO;
     }
 
     @Override
     @Transactional
     public MessageDTO update(MessageDTO messageDTO) {
-        if (messageRepository.findById(messageDTO.getId()).isPresent()){
-            create(messageDTO);
-            return messageDTO;
+        if (!(messageRepository.findById(messageDTO.getId()).isPresent())) {
+            throw new ResourceNotFoundException("Message with id = " + messageDTO.getId() + " not found", "");
         }
-        throw new ResourceNotFoundException("No message found with id = " + messageDTO.getId(), "");
+        return create(messageDTO);
     }
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('message:remove')")
     public boolean deleteById(Long id) {
-        if(messageRepository.findById(id).isPresent()) {
-            messageRepository.deleteById(id);
-            return (messageRepository.findById(id).isPresent());
+        if (!(messageRepository.findById(id).isPresent())) {
+            throw new ResourceNotFoundException("Message with id = " + id + " not found", "");
         }
-        throw new ResourceNotFoundException("No message found with id = " + id, "");
+        messageRepository.deleteById(id);
+        return (messageRepository.findById(id).isPresent());
     }
 
     @Override
     @PreAuthorize("hasAuthority('message:send')")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public MessageDTO createByRoomName(String roomName, String text) {
-        if (roomRepository.findByName(roomName).isPresent()) {
-            UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userRepository.findByName(securityUser.getUsername()).get();
-            if (connectionRepository.findByUserAndRoom(user, roomRepository.findByName(roomName).get()).isPresent()) {
-                if (!(connectionService.checkDisconnect(user, roomName)) && (!userService.checkBan(user))) {
-                    MessageDTO messageDTO = new MessageDTO(
-                            null,
-                            connectionRepository.findByUserAndRoom(user, roomRepository.findByName(roomName).get()).get(),
-                            text,
-                            new Date()
-                    );
-                    messageRepository.save(toEntity(messageDTO));
-                    return messageDTO;
-                }
-                throw new NoPermissionException("you are disconnect from room named = " + roomName + " or banned", "");
-            }
-            throw new ResourceNotFoundException("No connection  with roomName = " + roomName + " userName = " + user.getName() , "");
+        if (!(roomRepository.findByName(roomName).isPresent())) {
+            throw new ResourceNotFoundException("Room with name = " + roomName + " not found", "");
         }
-        throw new ResourceNotFoundException("No room found with name = " + roomName, "");
-
+        Room room = roomRepository.findByName(roomName).get();
+        UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByName(securityUser.getUsername()).get();
+        if (!(connectionRepository.findByUserAndRoom(user, room).isPresent())) {
+            throw new ResourceNotFoundException("Connection with userName = " + user.getName() + " and roomName = " + roomName+ " not found", "");
+        }
+        Connection connection = connectionRepository.findByUserAndRoom(user, room).get();
+        if (connectionService.checkDisconnect(user, room) || userService.checkBan(user)) {
+            throw new NoPermissionException("You are disconnect from room named = " + roomName + " or banned globally", "");
+        }
+        MessageDTO messageDTO = new MessageDTO(null, connection, text, new Date());
+        messageRepository.save(toEntity(messageDTO));
+        return messageDTO;
     }
 
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('message:get')")
     public List<MessageDTO> getFromRoom(String roomName) {
-        if (roomRepository.findByName(roomName).isPresent()) {
-            UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = userRepository.findByName(securityUser.getUsername()).get();
-            if (connectionRepository.findByUserAndRoom(user, roomRepository.findByName(roomName).get()).isPresent()) {
-                return allToDTO(messageRepository.findMessagesByConnection(
-                        connectionRepository.findByUserAndRoom(
-                                user,
-                                roomRepository.findByName(roomName).get()
-                        ).get()
-                ));
-            }
-
+        if (!(roomRepository.findByName(roomName).isPresent())) {
+            throw new ResourceNotFoundException("Room with name = " + roomName + " not found", "");
         }
-        throw new ResourceNotFoundException("No room found with name = " + roomName, "");
+        Room room = roomRepository.findByName(roomName).get();
+        UserDetails securityUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByName(securityUser.getUsername()).get();
+
+        if (!(connectionRepository.findByUserAndRoom(user,room).isPresent())) {
+            throw new ResourceNotFoundException("Connection with userName = " + user.getName() + " and roomName = " + roomName+ " not found", "");
+        }
+        Connection connection = connectionRepository.findByUserAndRoom(user, room).get();
+        return allToDTO(messageRepository.findMessagesByConnection(connection));
     }
 
     private Message toEntity(MessageDTO messageDTO){
@@ -142,3 +137,4 @@ public class MessageServiceImpl implements MessageService {
         return MessageMapper.MESSAGE_MAPPER.allToDTO(messageList);
     }
 }
+

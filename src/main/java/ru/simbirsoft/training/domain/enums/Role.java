@@ -48,12 +48,6 @@ public enum Role {
         add(Permission.MESSAGE_SEND);
         add(Permission.MESSAGE_GET);
         add(Permission.MESSAGE_REMOVE);
-    }}),
-
-    BLOCKED(new HashSet<Permission>(){{
-
-        add(Permission.MESSAGE_GET);
-
     }});
 
     private final Set<Permission> permissions;
