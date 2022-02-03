@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.simbirsoft.training.domain.Connection;
 import ru.simbirsoft.training.domain.User;
 import ru.simbirsoft.training.domain.enums.Permission;
+import ru.simbirsoft.training.domain.enums.RoomType;
 import ru.simbirsoft.training.dto.ConnectionDTO;
 import ru.simbirsoft.training.exceptions.NoPermissionException;
 import ru.simbirsoft.training.exceptions.ResourceNotFoundException;
@@ -95,13 +96,20 @@ public class ConnectionServiceImpl implements ConnectionService {
                 User user = userRepository.findByName(securityUser.getUsername()).get();
                 if (checkLocate(user, roomName) || user.equals(roomRepository.findByName(roomName).get().getOwner())) {
                     if (!(checkDisconnect(user, roomName)) && (!userService.checkBan(user))) {
-                        ConnectionDTO connectionDTO = new ConnectionDTO(null,
-                                userRepository.findByName(userName).get(),
-                                roomRepository.findByName(roomName).get(),
-                                null);
 
-                        connectionRepository.save(toEntity(connectionDTO));
-                        return connectionDTO;
+                        if (!(roomRepository.findByName(roomName).get().getType().equals(RoomType.PRIVATE)
+                                && connectionRepository.findConnectionsByRoom(roomRepository.findByName(roomName).get()).size() >= 2)) {
+
+
+                            ConnectionDTO connectionDTO = new ConnectionDTO(null,
+                                    userRepository.findByName(userName).get(),
+                                    roomRepository.findByName(roomName).get(),
+                                    null);
+
+                            connectionRepository.save(toEntity(connectionDTO));
+                            return connectionDTO;
+                        }
+                        throw new NoPermissionException("private room already full", "");
                     }
                     throw new NoPermissionException("you are disconnect from room named = " + roomName + " or banned", "");
                 }

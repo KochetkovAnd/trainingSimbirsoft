@@ -150,7 +150,21 @@ public class BotServiceImpl implements BotService {
             } else if (command.matches("\\/\\/yBot channelInfo \\{.+\\}")) {
 
                 String channelName = command.substring(command.indexOf("{") + 1, command.indexOf("}"));
-                return null;
+                String channelId;
+                List<Videos> videosList;
+
+                try {
+                    if (!channelName.isEmpty()) {
+                        channelId = searchVideoYoutube.getChannelId(channelName);
+                    } else {
+                        channelId = "";
+                    }
+                    videosList = searchVideoYoutube.getLastFiveVideos(channelId);
+                    return videosList;
+
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
 
             } else if (command.matches("\\/\\/yBot videoCommentRandom \\{.+\\}\\|\\|\\{.+\\}")) {
 

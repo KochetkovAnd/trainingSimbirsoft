@@ -130,4 +130,58 @@ public class SearchVideoYoutube {
         }
         return nameAndCommentMap;
     }
+    public List<Videos> getLastFiveVideos(String channelId) throws Throwable {
+
+        Long resultCount = Long.parseLong("5");
+        Boolean sort = true;
+
+        List<Videos> videosList = new ArrayList<>();
+
+        YouTube.Search.List search = youTube.search().list("id,snippet");
+        search.setKey(apikey);
+
+        if (sort) {
+            search.setOrder("date");
+        }
+
+        if (!channelId.isEmpty()) {
+            search.setChannelId(channelId);
+        }
+
+        search.setFields("items(id/kind,id/videoId,snippet/title,snippet/publishedAt)");
+        if (resultCount > 0) {
+            search.setMaxResults(resultCount);
+        }
+
+        SearchListResponse searchListResponse = search.execute();
+        List<SearchResult> searchResultList = searchListResponse.getItems();
+        if (searchResultList != null) {
+            Iterator<SearchResult> iterator = searchResultList.iterator();
+            if (iterator.hasNext()) {
+                while (iterator.hasNext()) {
+
+                    SearchResult singleVideo = iterator.next();
+                    ResourceId resourceId = singleVideo.getId();
+
+                    if (resourceId.getKind().equals("youtube#video")) {
+                        Videos videos = new Videos();
+                        videos.setId(resourceId.getVideoId());
+                        videos.setTitle(singleVideo.getSnippet().getTitle());
+                        videos.setPublished(new Date(singleVideo.getSnippet().getPublishedAt().getValue()));
+                        YouTube.Videos.List youtubeVideos = youTube.videos().list("id,snippet,player,contentDetails,statistics").setId(resourceId.getVideoId());
+                        youtubeVideos.setKey(apikey);
+                        VideoListResponse videoListResponse = youtubeVideos.execute();
+
+                        if (!videoListResponse.getItems().isEmpty()) {
+                            Video video = videoListResponse.getItems().get(0);
+                            videos.setViewCount(video.getStatistics().getViewCount().longValue());
+                            videos.setLikeCount(video.getStatistics().getLikeCount().longValue());
+                        }
+                        videosList.add(videos);
+                    }
+                }
+            }
+        }
+        return  videosList;
+    }
 }
